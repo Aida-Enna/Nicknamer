@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Nicknamer
 {
-    public class NicknameCollection
+    public class NicknameCollection : List<NicknameEntry>
     {
-        public List<NicknameEntry> Entries { get; set; } = new();
+        public ulong OwnerID { get; set; }
     }
 
     public class NicknameEntry
@@ -17,5 +17,10 @@ namespace Nicknamer
         public string PlayerWorld { get; set; }
         public string Nickname { get; set; }
         public bool Enabled { get; set; }
+        public ulong ContentID { get; set; }
+        public bool OverrideGlobalStyle { get; set; }
+        public bool OverrideGlobalItalics { get; set; }
+        public bool OverrideGlobalColor { get; set; }
+        public ushort OverrideGlobalColorActualColor { get; set; }
     }
 }

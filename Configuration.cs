@@ -1,16 +1,17 @@
 using Dalamud.Configuration;
 using Dalamud.Plugin;
+using System.Collections.Generic;
 
 namespace Nicknamer
 {
     public class Configuration : IPluginConfiguration
     {
         public int Version { get; set; }
-        public bool UseItalics = false;
-        public bool UseCustomColor = false;
-        public int SelectedColor = 0;
+        public bool Global_UseItalics = false;
+        public bool Global_UseCustomColor = false;
+        public ushort Global_SelectedColor = 57;
 
-        public NicknameCollection Nicknames { get; set; } = new NicknameCollection { };
+        public Dictionary<ulong, NicknameCollection> Nicknames { get; set; } = new Dictionary<ulong, NicknameCollection>();
 
         private IDalamudPluginInterface pluginInterface;
 
