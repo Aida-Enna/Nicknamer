@@ -1,22 +1,21 @@
-﻿using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Veda
+namespace Nicknamer
 {
-    public class ColorType
+    public class NicknameCollection
     {
-        //https://i.imgur.com/cZceCI3.png
-        public const ushort Normal = 0;
-        public const ushort Error = 17;
-        public const ushort Success = 45;
-        public const ushort Warn = 31;
-        public const ushort Info = 37;
-        public const ushort Twitch = 541;
+        public List<NicknameEntry> Entries { get; set; } = new();
+    }
+
+    public class NicknameEntry
+    {
+        public string PlayerName { get; set; }
+        public string PlayerWorld { get; set; }
+        public string Nickname { get; set; }
+        public bool Enabled { get; set; }
     }
 }
