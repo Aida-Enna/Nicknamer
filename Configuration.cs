@@ -7,7 +7,9 @@ namespace Nicknamer
     {
         public int Version { get; set; }
         public bool UseItalics = false;
-        public bool UseColor = false;
+        public bool UseCustomColor = false;
+        public int SelectedColor = 0;
+
         public NicknameCollection Nicknames { get; set; } = new NicknameCollection { };
 
         private IDalamudPluginInterface pluginInterface;

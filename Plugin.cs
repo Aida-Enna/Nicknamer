@@ -21,6 +21,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina;
+using Lumina.Excel.Sheets;
 using Lumina.Text.Payloads;
 using System;
 using System.Collections.Concurrent;
@@ -83,10 +84,6 @@ namespace Nicknamer
             Chat.ChatMessage += ChatMessage;
 
             ContextMenu.OnMenuOpened += OnContextMenuOpened;
-
-            //PluginConfig.Nicknames.Entries.Add(new NicknameEntry { PlayerName = "Wicked Thunder", PlayerWorld = "Adamantoise", Nickname = "Love<3", Enabled = true });
-            //PluginConfig.Nicknames.Entries.Add(new NicknameEntry { PlayerName = "Howling Blade", PlayerWorld = "Adamantoise", Nickname = "<3Love", Enabled = true });
-            //PluginConfig.Save();
         }
 
         private void ChatMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -101,8 +98,7 @@ namespace Nicknamer
                 //TODO:
                 //Have it be configurable for in front or behind player name
                 //Modify color?
-                //Italic or not
-                //Use JSON to store what we should replace, playername+world
+                //Make each NicknameCollection specific to character
 
                 foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
                 {
@@ -116,11 +112,19 @@ namespace Nicknamer
                     if (CurrentNicknameEntry == null) { continue; }
                     if (CurrentNicknameEntry.Enabled == false) { continue; }
 
-                    sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
-                    if (PluginConfig.UseItalics) { sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++; }
-                    sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
-                    if (PluginConfig.UseItalics) { sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++; }
-                    sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
+                    //if (PluginConfig.ReplaceTest)
+                    //{
+                    //    sender.Payloads[sender.Payloads.FindIndex(x => x is RawPayload)] = new RawPayload(Encoding.UTF8.GetBytes("Test Test"));
+                    //}
+                    //else
+                    //{
+                        if ()
+                        sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
+                        if (PluginConfig.UseItalics) { sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++; }
+                        sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
+                        if (PluginConfig.UseItalics) { sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++; }
+                        sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
+                    //}
                 }
             }
             catch (Exception f)
