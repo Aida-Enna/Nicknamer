@@ -1,0 +1,21 @@
+{
+  "Author": "Aida Enna",
+  "Name": "Nicknamer",
+  "ApplicableVersion": "any",
+  "Punchline": "Is this person Dew or Drew? I couldn't remember, so I made this plugin. Now I don't have to!",
+  "Description": "Adds a nickname to players so you remember who they actually are",
+  "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+  "Tags": [
+    "nickname",
+    "name",
+    "aida"
+  ],
+  "CategoryTags": null,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": "https://i.imgur.com/4wklzed.png"
+}
