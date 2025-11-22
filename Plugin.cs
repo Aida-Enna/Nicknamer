@@ -124,19 +124,40 @@ namespace Nicknamer
                     if (CurrentNicknameEntry.Enabled == false) { continue; }
                     if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
 
-                    //if (PluginConfig.ReplaceTest)
-                    //{
-                    //    sender.Payloads[sender.Payloads.FindIndex(x => x is RawPayload)] = new RawPayload(Encoding.UTF8.GetBytes("Test Test"));
-                    //}
-                    //else
-                    //{
-                    if (PluginConfig.Global_UseCustomColor) { sender.Payloads.Insert(NextIndex, new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor)); NextIndex++; }
+                    //If we've set a global custom color but NOT an override
+                    if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalColor == false)
+                    {
+                        //Apply the color
+                        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor)); NextIndex++;
+                    }
+                    //If we've set an override
+                    if (CurrentNicknameEntry.OverrideGlobalColor)
+                    {
+                        //Apply the color
+                        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor)); NextIndex++;
+                    }
+                    //Insert the start of the new text payload
                     sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
-                    if (PluginConfig.Global_UseItalics) { sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++; }
+                    //If we have global or override italics on
+                    if (PluginConfig.Global_UseItalics || CurrentNicknameEntry.OverrideGlobalItalics)
+                    {
+                        //Apply italics
+                        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++;
+                    }
+                    //Put the name in
                     sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
-                    if (PluginConfig.Global_UseItalics) { sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++; }
+                    //If we have global or override italics on, end them here
+                    if (PluginConfig.Global_UseItalics || CurrentNicknameEntry.OverrideGlobalItalics)
+                    {
+                        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++; 
+                    }
+                    //end of the text
                     sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
-                    if (PluginConfig.Global_UseCustomColor) { sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++; }
+                    //end the color
+                    if (PluginConfig.Global_UseCustomColor || CurrentNicknameEntry.OverrideGlobalColor)
+                    {
+                        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++;
+                    }
                     //}
                 }
             }
@@ -262,12 +283,12 @@ namespace Nicknamer
         {
             var ContextMenuPtr = GameGui.GetAddonByName("ContextMenu", 1);
             var addonContextMenu = (AddonContextMenu*)ContextMenuPtr.Address;
-            ChangeNickname_UI.NewNicknameString = "";
             ChangeNickname_UI.PlayerName = currentNicknameEntry.PlayerName;
             ChangeNickname_UI.PlayerWorld = currentNicknameEntry.PlayerWorld;
             ChangeNickname_UI.StartingPositionX = addonContextMenu->X;
             ChangeNickname_UI.StartingPositionY = addonContextMenu->Y;
             ChangeNickname_UI.OldNicknameString = currentNicknameEntry.Nickname;
+            ChangeNickname_UI.NewNicknameString = currentNicknameEntry.Nickname;
             ChangeNickname_UI.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
             ChangeNickname_UI.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
             ChangeNickname_UI.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
