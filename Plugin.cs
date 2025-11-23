@@ -269,8 +269,6 @@ namespace Nicknamer
             ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
             ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
 
-            FixNicknameEntries();
-
             ChangeNicknameWindow.Toggle();
         }
 
@@ -287,8 +285,6 @@ namespace Nicknamer
             ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
             ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
 
-            FixNicknameEntries();
-
             ChangeNicknameWindow.Toggle();
         }
 
@@ -298,6 +294,7 @@ namespace Nicknamer
             PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
             PluginConfig.Save();
             Chat.Print("[NN] " + currentNicknameEntry.PlayerName + "@" + currentNicknameEntry.PlayerWorld + "'s nickname has been removed.");
+            FixNicknameEntries();
         }
 
         public static void FixNicknameEntries()
