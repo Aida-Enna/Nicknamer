@@ -1,10 +1,14 @@
 ﻿using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using static FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.VertexShader;
 
 namespace Nicknamer.Windows
 {
@@ -34,6 +38,7 @@ namespace Nicknamer.Windows
 
         public override void Draw()
         {
+            List<NicknameEntry> ToRemove = new();
             ImGui.Text(Plugin.ClientState.LocalPlayer.Name + "@" + Plugin.ClientState.LocalPlayer.HomeWorld.Value.Name.ExtractText() + " has set the following nicknames and overrides:");
             if (ImGui.BeginTable($"##TotalStatsTable", 7, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
             {
@@ -97,7 +102,7 @@ namespace Nicknamer.Windows
                     ImGui.TableNextColumn();
                     if (ImGui.Button("Delete"))
                     {
-                        Plugin.RemoveNickname(Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId][index]);
+                        ToRemove.Add(Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId][index]);
                     }
                 }
                 ImGui.EndTable();
@@ -110,7 +115,7 @@ namespace Nicknamer.Windows
                 ImGui.SameLine();
                 if (ImGui.BeginCombo("World", string.IsNullOrWhiteSpace(PlayerToAddWorld) ? "Not Selected" : PlayerToAddWorld))
                 {
-                    foreach (var w in worldSheet.Where(w => w.IsPublic))
+                    foreach (var w in worldSheet.Where(w => w.IsPublic).OrderBy(x => x.Name.ToString()))
                     {
                         if (ImGui.Selectable(w.Name.ToString()))
                         {
@@ -121,8 +126,23 @@ namespace Nicknamer.Windows
                 }
                 if (ImGui.Button("Add"))
                 {
-                    Plugin.Chat.Print("Trying to add " + PlayerToAddName + "@" + PlayerToAddWorld);
+                    if (string.IsNullOrWhiteSpace(PlayerToAddName) || PlayerToAddName.Count(c => c == ' ') != 1)
+                    {
+                        Plugin.Chat.Print("Invalid name, please check it again.");
+                        return;
+                    }
+                    if (string.IsNullOrWhiteSpace(PlayerToAddWorld) || PlayerToAddWorld == "Not Selected")
+                    {
+                        Plugin.Chat.Print("Invalid world, please check it again.");
+                        return;
+                    }
+
+                    Plugin.AddNickname(CultureInfo.CurrentCulture.TextInfo.ToTitleCase(PlayerToAddName.ToLower()), PlayerToAddWorld);
                 }
+            }
+            foreach (var Item in ToRemove)
+            {
+                Plugin.RemoveNickname(Item);
             }
         }
     }
