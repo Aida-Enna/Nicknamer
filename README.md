@@ -1,6 +1,7 @@
 # Nicknamer
 
 Lets you add a nickname to players in chat so you remember who they actually are or any other information you want to remember about them.
+
 Supports different customization per person or global customization.
 
 ## Choosing a custom color
