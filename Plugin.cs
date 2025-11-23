@@ -280,6 +280,8 @@ namespace Nicknamer
             ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
             ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
 
+            FixNicknameEntries();
+
             ChangeNicknameWindow.Toggle();
         }
 
@@ -298,6 +300,8 @@ namespace Nicknamer
             ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
             ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
 
+            FixNicknameEntries();
+
             ChangeNicknameWindow.Toggle();
         }
 
@@ -307,6 +311,24 @@ namespace Nicknamer
             PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
             PluginConfig.Save();
             Chat.Print("[NN] " + currentNicknameEntry.PlayerName + "@" + currentNicknameEntry.PlayerWorld + "'s nickname has been removed.");
+        }
+
+        public static void FixNicknameEntries()
+        {
+            List<NicknameEntry> EntriesToRemove = new();
+            foreach (NicknameEntry Entry in PluginConfig.Nicknames[ClientState.LocalContentId])
+            {
+                if (string.IsNullOrWhiteSpace(Entry.Nickname))
+                {
+                    EntriesToRemove.Add(Entry);
+                }
+            }
+            foreach(NicknameEntry EntryToRemove in EntriesToRemove)
+            {
+                PluginConfig.Nicknames[ClientState.LocalContentId].Remove(EntryToRemove);
+                PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
+                PluginConfig.Save();
+            }
         }
 
         [Command("/nickname")]
