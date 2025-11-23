@@ -90,7 +90,6 @@ namespace Nicknamer
             this.commandManager = new PluginCommandManager<Plugin>(this, commands);
 
             Chat.ChatMessage += ChatMessage;
-
             ContextMenu.OnMenuOpened += OnContextMenuOpened;
         }
 
@@ -98,10 +97,6 @@ namespace Nicknamer
         {
             try
             {
-                //if (isHandled)
-                //{
-                //    return;
-                //}
                 if (!ClientState.IsLoggedIn) { return; }
 
                 if (!PluginConfig.Nicknames.ContainsKey(ClientState.LocalContentId))
@@ -109,11 +104,6 @@ namespace Nicknamer
                     PluginConfig.Nicknames.Add(ClientState.LocalContentId, new NicknameCollection());
                     PluginConfig.Save();
                 }
-
-                //TODO:
-                //Have it be configurable for in front or behind player name
-                //Make each NicknameCollection specific to character
-                //Have universal custom color/in front or behind/italics and then have overrides for each person
 
                 foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
                 {
@@ -175,6 +165,7 @@ namespace Nicknamer
         {
             try
             {
+                //Shamelessly copied from PlayerTrack - Thank you!
                 switch (args.AddonName)
                 {
                     case null:
@@ -264,8 +255,6 @@ namespace Nicknamer
             ChangeNicknameWindow.NewNicknameString = "";
             ChangeNicknameWindow.PlayerName = PlayerName;
             ChangeNicknameWindow.PlayerWorld = PlayerWorld;
-            //ChangeNicknameWindow.StartingPositionX = addonContextMenu->X;
-            //ChangeNicknameWindow.StartingPositionY = addonContextMenu->Y;
             ChangeNicknameWindow.OldNicknameString = "";
             NicknameEntry? currentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
@@ -291,8 +280,6 @@ namespace Nicknamer
             var addonContextMenu = (AddonContextMenu*)ContextMenuPtr.Address;
             ChangeNicknameWindow.PlayerName = currentNicknameEntry.PlayerName;
             ChangeNicknameWindow.PlayerWorld = currentNicknameEntry.PlayerWorld;
-            //ChangeNicknameWindow.StartingPositionX = addonContextMenu->X;
-            //ChangeNicknameWindow.StartingPositionY = addonContextMenu->Y;
             ChangeNicknameWindow.OldNicknameString = currentNicknameEntry.Nickname;
             ChangeNicknameWindow.NewNicknameString = currentNicknameEntry.Nickname;
             ChangeNicknameWindow.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
@@ -333,7 +320,7 @@ namespace Nicknamer
 
         [Command("/nickname")]
         [Aliases("/nicknamer", "/nn")]
-        [HelpMessage("Shows the config menu")]
+        [HelpMessage("Shows the main window")]
         public void ToggleMain(string command, string args)
         {
             MainWindow.Toggle();
@@ -359,12 +346,14 @@ namespace Nicknamer
             PluginInterface.SavePluginConfig(PluginConfig);
 
             PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
+            PluginInterface.UiBuilder.OpenMainUi -= MainWindow.Toggle;
             PluginInterface.UiBuilder.OpenConfigUi -= ConfigWindow.Toggle;
 
             WindowSystem.RemoveAllWindows();
 
             ConfigWindow.Dispose();
-
+            MainWindow.Dispose();
+            ChangeNicknameWindow.Dispose();
 
             Chat.ChatMessage -= ChatMessage;
             ContextMenu.OnMenuOpened -= OnContextMenuOpened;

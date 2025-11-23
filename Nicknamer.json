@@ -3,7 +3,7 @@
   "Name": "Nicknamer",
   "ApplicableVersion": "any",
   "Punchline": "Is this person Dew or Drew? I couldn't remember, so I made this plugin. Now I don't have to!",
-  "Description": "Adds a nickname to players in chat so you remember who they actually are.",
+  "Description": "Lets you add a nickname to players in chat so you remember who they actually are or any other information you want to remember about them.\nSupports different customization per person or global customization.",
   "RepoUrl": "https://github.com/Aida-Enna/Nicknamer",
   "Tags": [
     "nickname",

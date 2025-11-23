@@ -15,8 +15,6 @@ namespace Nicknamer.Windows
     {
         public string PlayerName = "ERROR";
         public string PlayerWorld = "ERROR";
-        //public int StartingPositionX = 0;
-        //public int StartingPositionY = 0;
         public string NewNicknameString = "";
         public string OldNicknameString = "";
         public bool OverrideGlobalStyle = false;
@@ -38,7 +36,6 @@ namespace Nicknamer.Windows
 
         public override void PreDraw()
         {
-            //Position = new Vector2(StartingPositionX + 50, StartingPositionY + 50);
         }
 
         public override void Draw()
