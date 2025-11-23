@@ -1,21 +1,16 @@
 ﻿using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Colors;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.UI;
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
-using Veda;
 
 namespace Nicknamer.Windows
 {
     public class MainWindow : Window, IDisposable
     {
+        private static ExcelSheet<World>? worldSheet = Plugin.DataManager.GetExcelSheet<World>();
 
         // We give this window a constant ID using ###.
         // This allows for labels to be dynamic, like "{FPS Counter}fps###XYZ counter window",
@@ -24,16 +19,19 @@ namespace Nicknamer.Windows
         {
             Flags = ImGuiWindowFlags.AlwaysAutoResize;
             SizeCondition = ImGuiCond.Always;
-
         }
-        public void Dispose() { }
+
+        public void Dispose()
+        { }
 
         public override void PreDraw()
         {
-
         }
 
         private bool ShowSupport;
+        public string PlayerToAddName = "";
+        public string PlayerToAddWorld = "";
+
         public override void Draw()
         {
             ImGui.Text(Plugin.ClientState.LocalPlayer.Name + "@" + Plugin.ClientState.LocalPlayer.HomeWorld.Value.Name.ExtractText() + " has set the following nicknames and overrides:");
@@ -103,6 +101,28 @@ namespace Nicknamer.Windows
                     }
                 }
                 ImGui.EndTable();
+                ImGui.Text("Name: ");
+                ImGui.SameLine();
+                ImGui.Indent(300);
+                ImGui.Text("World: ");
+                ImGui.Unindent(300);
+                ImGui.InputText("##Name", ref PlayerToAddName);
+                ImGui.SameLine();
+                if (ImGui.BeginCombo("World", string.IsNullOrWhiteSpace(PlayerToAddWorld) ? "Not Selected" : PlayerToAddWorld))
+                {
+                    foreach (var w in worldSheet.Where(w => w.IsPublic))
+                    {
+                        if (ImGui.Selectable(w.Name.ToString()))
+                        {
+                            PlayerToAddWorld = w.Name.ToString();
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+                if (ImGui.Button("Add"))
+                {
+                    Plugin.Chat.Print("Trying to add " + PlayerToAddName + "@" + PlayerToAddWorld);
+                }
             }
         }
     }

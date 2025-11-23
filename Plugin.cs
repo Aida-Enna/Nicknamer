@@ -53,7 +53,8 @@ namespace Nicknamer
         [PluginService] public static IPluginLog PluginLog { get; set; }
         [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static IClientState ClientState { get; set; } = null!;
-        [PluginService] internal static IContextMenu ContextMenu { get; private set; } = null!;
+        [PluginService] public static IContextMenu ContextMenu { get; private set; } = null!;
+        [PluginService] public static IDataManager DataManager { get; private set; } = null!;
 
         private PluginCommandManager<Plugin> commandManager;
         public static Configuration PluginConfig { get; set; }
@@ -128,13 +129,13 @@ namespace Nicknamer
                     if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
 
                     //If we've set a global custom color but NOT an override
-                    if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalColor == false)
+                    if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
                     {
                         //Apply the color
                         sender.Payloads.Insert(NextIndex, new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor)); NextIndex++;
                     }
                     //If we've set an override
-                    if (CurrentNicknameEntry.OverrideGlobalColor)
+                    if (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor)
                     {
                         //Apply the color
                         sender.Payloads.Insert(NextIndex, new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor)); NextIndex++;
@@ -142,7 +143,7 @@ namespace Nicknamer
                     //Insert the start of the new text payload
                     sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
                     //If we have global or override italics on
-                    if (PluginConfig.Global_UseItalics || CurrentNicknameEntry.OverrideGlobalItalics)
+                    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
                     {
                         //Apply italics
                         sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++;
@@ -150,14 +151,14 @@ namespace Nicknamer
                     //Put the name in
                     sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
                     //If we have global or override italics on, end them here
-                    if (PluginConfig.Global_UseItalics || CurrentNicknameEntry.OverrideGlobalItalics)
+                    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
                     {
                         sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++; 
                     }
                     //end of the text
                     sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
                     //end the color
-                    if (PluginConfig.Global_UseCustomColor || CurrentNicknameEntry.OverrideGlobalColor)
+                    if (PluginConfig.Global_UseCustomColor || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor))
                     {
                         sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++;
                     }
@@ -311,10 +312,19 @@ namespace Nicknamer
         [Command("/nickname")]
         [Aliases("/nicknamer", "/nn")]
         [HelpMessage("Shows the config menu")]
+        public void ToggleMain(string command, string args)
+        {
+            MainWindow.Toggle();
+        }
+
+        [Command("/nicknameconfig")]
+        [Aliases("/nnconfig", "/nnc")]
+        [HelpMessage("Shows the config menu")]
         public void ToggleConfig(string command, string args)
         {
             ConfigWindow.Toggle();
         }
+
 
         #region IDisposable Support
 

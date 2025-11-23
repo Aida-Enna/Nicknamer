@@ -43,7 +43,7 @@ namespace Nicknamer.Windows
                     Process.Start(new ProcessStartInfo { FileName = "https://github.com/Aida-Enna/Nicknamer/tree/main?tab=readme-ov-file#choosing-a-custom-color", UseShellExecute = true });
                 }
             }
-            ImGui.Text("Per-player overrides are available from the right click -> nickname menu.");
+            ImGui.Text("Per-player overrides are available from the\nright click -> nickname menu or the main window.");
             if (ImGui.Button("Want to help support my work?"))
             {
                 ShowSupport = !ShowSupport;
