@@ -8,6 +8,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Hooking;
+using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Memory;
 using Dalamud.Plugin;
@@ -24,6 +25,7 @@ using Lumina;
 using Lumina.Excel.Sheets;
 using Lumina.Excel.Sheets.Experimental;
 using Lumina.Text.Payloads;
+using Nicknamer.Windows;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -54,12 +56,12 @@ namespace Nicknamer
         [PluginService] internal static IContextMenu ContextMenu { get; private set; } = null!;
 
         private PluginCommandManager<Plugin> commandManager;
-        private PluginUI ui;
         public static Configuration PluginConfig { get; set; }
 
-        public static ChangeNicknameUI ChangeNickname_UI;
-
-        public static bool HideWindows = true;
+        public readonly WindowSystem WindowSystem = new("Nicknamer");
+        private ConfigWindow ConfigWindow { get; init; }
+        public static ChangeNicknameWindow ChangeNicknameWindow { get; set; }
+        private MainWindow MainWindow { get; init; }
 
         public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IClientState clientState)
         {
@@ -71,16 +73,17 @@ namespace Nicknamer
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
 
-            ChangeNickname_UI = new ChangeNicknameUI();
+            ConfigWindow = new ConfigWindow(this);
+            ChangeNicknameWindow = new ChangeNicknameWindow(this);
+            MainWindow = new MainWindow(this);
 
-            ui = new PluginUI();
-            PluginInterface.UiBuilder.Draw += new System.Action(ui.Draw);
-            PluginInterface.UiBuilder.Draw += new System.Action(ChangeNickname_UI.Draw);
-            PluginInterface.UiBuilder.OpenConfigUi += () =>
-            {
-                PluginUI ui = this.ui;
-                ui.IsVisible = !ui.IsVisible;
-            };
+            WindowSystem.AddWindow(ConfigWindow);
+            WindowSystem.AddWindow(ChangeNicknameWindow);
+            WindowSystem.AddWindow(MainWindow);
+
+            PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
+            PluginInterface.UiBuilder.OpenMainUi += MainWindow.Toggle;
+            PluginInterface.UiBuilder.OpenConfigUi += ConfigWindow.Toggle;
 
             // Load all of our commands
             this.commandManager = new PluginCommandManager<Plugin>(this, commands);
@@ -257,12 +260,12 @@ namespace Nicknamer
         {
             var ContextMenuPtr = GameGui.GetAddonByName("ContextMenu", 1);
             var addonContextMenu = (AddonContextMenu*)ContextMenuPtr.Address;
-            ChangeNickname_UI.NewNicknameString = "";
-            ChangeNickname_UI.PlayerName = PlayerName;
-            ChangeNickname_UI.PlayerWorld = PlayerWorld;
-            ChangeNickname_UI.StartingPositionX = addonContextMenu->X;
-            ChangeNickname_UI.StartingPositionY = addonContextMenu->Y;
-            ChangeNickname_UI.OldNicknameString = "";
+            ChangeNicknameWindow.NewNicknameString = "";
+            ChangeNicknameWindow.PlayerName = PlayerName;
+            ChangeNicknameWindow.PlayerWorld = PlayerWorld;
+            //ChangeNicknameWindow.StartingPositionX = addonContextMenu->X;
+            //ChangeNicknameWindow.StartingPositionY = addonContextMenu->Y;
+            ChangeNicknameWindow.OldNicknameString = "";
             NicknameEntry? currentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
             if (currentNicknameEntry == null)
@@ -271,35 +274,36 @@ namespace Nicknamer
                 PluginConfig.Save();
                 currentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
             }
-            ChangeNickname_UI.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
-            ChangeNickname_UI.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
-            ChangeNickname_UI.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
-            ChangeNickname_UI.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
+            ChangeNicknameWindow.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
+            ChangeNicknameWindow.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
+            ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
+            ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
 
-            ChangeNickname_UI.IsVisible = true;
+            ChangeNicknameWindow.Toggle();
         }
 
         public static unsafe void ChangeNickname(NicknameEntry? currentNicknameEntry)
         {
             var ContextMenuPtr = GameGui.GetAddonByName("ContextMenu", 1);
             var addonContextMenu = (AddonContextMenu*)ContextMenuPtr.Address;
-            ChangeNickname_UI.PlayerName = currentNicknameEntry.PlayerName;
-            ChangeNickname_UI.PlayerWorld = currentNicknameEntry.PlayerWorld;
-            ChangeNickname_UI.StartingPositionX = addonContextMenu->X;
-            ChangeNickname_UI.StartingPositionY = addonContextMenu->Y;
-            ChangeNickname_UI.OldNicknameString = currentNicknameEntry.Nickname;
-            ChangeNickname_UI.NewNicknameString = currentNicknameEntry.Nickname;
-            ChangeNickname_UI.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
-            ChangeNickname_UI.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
-            ChangeNickname_UI.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
-            ChangeNickname_UI.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
+            ChangeNicknameWindow.PlayerName = currentNicknameEntry.PlayerName;
+            ChangeNicknameWindow.PlayerWorld = currentNicknameEntry.PlayerWorld;
+            //ChangeNicknameWindow.StartingPositionX = addonContextMenu->X;
+            //ChangeNicknameWindow.StartingPositionY = addonContextMenu->Y;
+            ChangeNicknameWindow.OldNicknameString = currentNicknameEntry.Nickname;
+            ChangeNicknameWindow.NewNicknameString = currentNicknameEntry.Nickname;
+            ChangeNicknameWindow.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
+            ChangeNicknameWindow.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
+            ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
+            ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
 
-            ChangeNickname_UI.IsVisible = true;
+            ChangeNicknameWindow.Toggle();
         }
 
         public static void RemoveNickname(NicknameEntry? currentNicknameEntry)
         {
             PluginConfig.Nicknames[ClientState.LocalContentId].Remove(currentNicknameEntry);
+            PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
             PluginConfig.Save();
             Chat.Print("[NN] " + currentNicknameEntry.PlayerName + "@" + currentNicknameEntry.PlayerWorld + "'s nickname has been removed.");
         }
@@ -309,89 +313,7 @@ namespace Nicknamer
         [HelpMessage("Shows the config menu")]
         public void ToggleConfig(string command, string args)
         {
-            ui.IsVisible = !ui.IsVisible;
-        }
-
-        public class ChangeNicknameUI
-        {
-            public string PlayerName = "ERROR";
-            public string PlayerWorld = "ERROR";
-            public int StartingPositionX = 0;
-            public int StartingPositionY = 0;
-            public bool IsVisible = false;
-            public string NewNicknameString = "";
-            public string OldNicknameString = "";
-            public bool OverrideGlobalStyle = false;
-            public bool OverrideGlobalItalics = false;
-            public bool OverrideGlobalColor = false;
-            public ushort OverrideGlobalColorActualColor = 57;
-
-            public void Draw()
-            {
-                if (!IsVisible || !ImGui.Begin("", ref IsVisible, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoMove)) { return; }
-                ImGui.SetWindowPos(new Vector2(StartingPositionX + 50, StartingPositionY + 50));
-                ImGui.SetWindowFocus();
-                NicknameEntry? CurrentEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
-
-                if (OldNicknameString != "") { ImGui.Text("Current nickname: " + OldNicknameString); }
-                ImGui.Text("New Nickname for " + PlayerName + "@" + PlayerWorld + ":");
-                ImGui.SetNextItemWidth(358);
-                if (ImGui.IsWindowAppearing()) { ImGui.SetKeyboardFocusHere(); }
-                if (ImGui.InputText("###NewNickname", ref NewNicknameString, 420 /*haha the sex number but weed*/, ImGuiInputTextFlags.EnterReturnsTrue) && !string.IsNullOrWhiteSpace(NewNicknameString))
-                {
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).Nickname = NewNicknameString;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalStyle = OverrideGlobalStyle;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalItalics = OverrideGlobalItalics;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColor = OverrideGlobalColor;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColorActualColor = OverrideGlobalColorActualColor;
-                    this.IsVisible = false;
-                    PluginConfig.Save();
-                    Chat.Print("[NN] " + PlayerName + "@" + PlayerWorld + "'s nickname has been set to: " + NewNicknameString);
-                }
-                ImGui.Checkbox("Override global style", ref OverrideGlobalStyle);
-                if (OverrideGlobalStyle)
-                {
-                    ImGui.Checkbox("Use italics", ref OverrideGlobalItalics);
-                    ImGui.Checkbox("Use custom color", ref OverrideGlobalColor);
-                    if (OverrideGlobalColor)
-                    {
-                        ImGui.Text("Use this color: ");
-                        ImGui.SameLine();
-                        ImGui.SetNextItemWidth(50);
-                        ImGui.DragUShort("####UIColor", ref OverrideGlobalColorActualColor, 1, 1, 580);
-                        ImGui.SameLine();
-                        ImGui.Text("(Default is 57)");
-                        if (ImGui.Button("Click here to see what colors you can use"))
-                        {
-                            Process.Start(new ProcessStartInfo { FileName = "https://github.com/Aida-Enna/Nicknamer/tree/main?tab=readme-ov-file#choosing-a-custom-color", UseShellExecute = true });
-                        }
-                    }
-                }
-                ImGui.Separator();
-                if (ImGui.Button("Press enter in the text box or click here to save", new Vector2(300, 20)))
-                {
-                    if (string.IsNullOrWhiteSpace(NewNicknameString))
-                    {
-                        Chat.Print("[NN] No nickname provided, save cancelled.");
-                        this.IsVisible = false;
-                        return;
-                    }
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).Nickname = NewNicknameString;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalStyle = OverrideGlobalStyle;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalItalics = OverrideGlobalItalics;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColor = OverrideGlobalColor;
-                    PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColorActualColor = OverrideGlobalColorActualColor;
-                    this.IsVisible = false;
-                    PluginConfig.Save();
-                    Chat.Print("[NN] " + PlayerName + "@" + PlayerWorld + "'s nickname has been set to: " + NewNicknameString);
-                }
-                ImGui.SameLine();
-                if (ImGui.Button("Cancel"))
-                {
-                    this.IsVisible = false;
-                }
-                ImGui.End();
-            }
+            ConfigWindow.Toggle();
         }
 
         #region IDisposable Support
@@ -404,13 +326,13 @@ namespace Nicknamer
 
             PluginInterface.SavePluginConfig(PluginConfig);
 
-            PluginInterface.UiBuilder.Draw -= ui.Draw;
-            PluginInterface.UiBuilder.Draw -= new System.Action(ChangeNickname_UI.Draw);
-            PluginInterface.UiBuilder.OpenConfigUi -= () =>
-            {
-                PluginUI ui = this.ui;
-                ui.IsVisible = !ui.IsVisible;
-            };
+            PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
+            PluginInterface.UiBuilder.OpenConfigUi -= ConfigWindow.Toggle;
+
+            WindowSystem.RemoveAllWindows();
+
+            ConfigWindow.Dispose();
+
 
             Chat.ChatMessage -= ChatMessage;
             ContextMenu.OnMenuOpened -= OnContextMenuOpened;
