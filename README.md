@@ -1,6 +1,7 @@
 # Nicknamer
 
-Adds a nickname to players in chat so you remember who they actually are.
+Lets you add a nickname to players in chat so you remember who they actually are or any other information you want to remember about them.
+Supports different customization per person or global customization.
 
 ## Choosing a custom color
 [Take a look at this picture](https://github.com/Aida-Enna/Nicknamer/blob/main/UI_Color_Chart.png?raw=true) and find the color you want (other than 0), then change the number in the settings to the number after "UI Color".
