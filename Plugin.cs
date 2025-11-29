@@ -55,6 +55,7 @@ namespace Nicknamer
         [PluginService] public static IClientState ClientState { get; set; } = null!;
         [PluginService] public static IContextMenu ContextMenu { get; private set; } = null!;
         [PluginService] public static IDataManager DataManager { get; private set; } = null!;
+        [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
 
         private PluginCommandManager<Plugin> commandManager;
         public static Configuration PluginConfig { get; set; }
@@ -64,11 +65,12 @@ namespace Nicknamer
         public static ChangeNicknameWindow ChangeNicknameWindow { get; set; }
         private MainWindow MainWindow { get; init; }
 
-        public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IClientState clientState)
+        public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IClientState clientState, IPlayerState playerState)
         {
             PluginInterface = pluginInterface;
             Chat = chat;
             ClientState = clientState;
+            PlayerState = playerState;
 
             // Get or create a configuration object
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();

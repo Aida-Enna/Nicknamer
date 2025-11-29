@@ -39,7 +39,8 @@ namespace Nicknamer.Windows
         public override void Draw()
         {
             List<NicknameEntry> ToRemove = new();
-            ImGui.Text(Plugin.ClientState.LocalPlayer.Name + "@" + Plugin.ClientState.LocalPlayer.HomeWorld.Value.Name.ExtractText() + " has set the following nicknames and overrides:");
+            if (string.IsNullOrWhiteSpace(Plugin.PlayerState.CharacterName) || Plugin.PlayerState is null || !Plugin.ClientState.IsLoggedIn) { return; }
+            ImGui.Text(Plugin.PlayerState.CharacterName + "@" + Plugin.PlayerState.HomeWorld + " has set the following nicknames and overrides:");
             if (ImGui.BeginTable($"##TotalStatsTable", 7, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
             {
                 ImGui.TableNextColumn();
@@ -58,7 +59,7 @@ namespace Nicknamer.Windows
 
                 ImGui.TableNextRow();
 
-                foreach (var (index, name) in Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Index())
+                foreach (var (index, name) in Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Index())
                 {
                     if (string.IsNullOrWhiteSpace(name.Nickname)) { continue; }
                     using var id = ImRaii.PushId(index);
@@ -97,12 +98,12 @@ namespace Nicknamer.Windows
                     }
                     if (ImGui.Button("Change"))
                     {
-                        Plugin.ChangeNickname(Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId][index]);
+                        Plugin.ChangeNickname(Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId][index]);
                     }
                     ImGui.TableNextColumn();
                     if (ImGui.Button("Delete"))
                     {
-                        ToRemove.Add(Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId][index]);
+                        ToRemove.Add(Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId][index]);
                     }
                 }
                 ImGui.EndTable();
