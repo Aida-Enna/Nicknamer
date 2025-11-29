@@ -43,21 +43,12 @@ namespace Nicknamer.Windows
             ImGui.Text(Plugin.PlayerState.CharacterName + "@" + Plugin.PlayerState.HomeWorld.Value.Name.ExtractText() + " has set the following nicknames and overrides:");
             if (ImGui.BeginTable($"##TotalStatsTable", 7, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
             {
-                ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Player Name");
-                ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Player World");
-
-                ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Nickname");
-                ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Italics");
-                ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Color");
-                ImGui.TableNextColumn();
-                ImGui.TableNextColumn();
-
-                ImGui.TableNextRow();
+                ImGui.TableSetupColumn("Player Name");
+                ImGui.TableSetupColumn("Player World");
+                ImGui.TableSetupColumn("Nickname");
+                ImGui.TableSetupColumn("Italics");
+                ImGui.TableSetupColumn("Color");
+                ImGui.TableHeadersRow();
 
                 foreach (var (index, name) in Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Index())
                 {
@@ -114,9 +105,10 @@ namespace Nicknamer.Windows
                 ImGui.Unindent(300);
                 ImGui.InputText("##Name", ref PlayerToAddName);
                 ImGui.SameLine();
-                if (ImGui.BeginCombo("World", string.IsNullOrWhiteSpace(PlayerToAddWorld) ? "Not Selected" : PlayerToAddWorld))
+                ImGui.SetNextItemWidth(180);
+                if (ImGui.BeginCombo("###World", string.IsNullOrWhiteSpace(PlayerToAddWorld) ? "Not Selected" : PlayerToAddWorld))
                 {
-                    foreach (var w in worldSheet.Where(w => w.IsPublic).OrderBy(x => x.Name.ToString()))
+                    foreach (World w in worldSheet.Where(w => w.IsPublic).OrderBy(x => x.Name.ToString()))
                     {
                         if (ImGui.Selectable(w.Name.ToString()))
                         {
@@ -125,6 +117,7 @@ namespace Nicknamer.Windows
                     }
                     ImGui.EndCombo();
                 }
+                ImGui.SameLine();
                 if (ImGui.Button("Add"))
                 {
                     if (string.IsNullOrWhiteSpace(PlayerToAddName) || PlayerToAddName.Count(c => c == ' ') != 1)
