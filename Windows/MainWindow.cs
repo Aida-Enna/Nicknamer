@@ -40,7 +40,7 @@ namespace Nicknamer.Windows
         {
             List<NicknameEntry> ToRemove = new();
             if (string.IsNullOrWhiteSpace(Plugin.PlayerState.CharacterName) || Plugin.PlayerState is null || !Plugin.ClientState.IsLoggedIn) { return; }
-            ImGui.Text(Plugin.PlayerState.CharacterName + "@" + Plugin.PlayerState.HomeWorld + " has set the following nicknames and overrides:");
+            ImGui.Text(Plugin.PlayerState.CharacterName + "@" + Plugin.PlayerState.HomeWorld.Value.Name.ExtractText() + " has set the following nicknames and overrides:");
             if (ImGui.BeginTable($"##TotalStatsTable", 7, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
             {
                 ImGui.TableNextColumn();

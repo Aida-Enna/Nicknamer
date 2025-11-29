@@ -40,7 +40,7 @@ namespace Nicknamer.Windows
                 ImGui.Text("(Default is 57)");
                 if (ImGui.Button("Click here to see what colors you can use"))
                 {
-                    Process.Start(new ProcessStartInfo { FileName = "https://github.com/Aida-Enna/Nicknamer/tree/main?tab=readme-ov-file#choosing-a-custom-color", UseShellExecute = true });
+                    Dalamud.Utility.Util.OpenLink("https://github.com/Aida-Enna/Nicknamer/tree/main?tab=readme-ov-file#choosing-a-custom-color");
                 }
             }
             ImGui.Text("Per-player overrides are available from the\nright click -> nickname menu or the main window.");
@@ -55,21 +55,21 @@ namespace Nicknamer.Windows
                 ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
                 if (ImGui.Button("Donate via Paypal"))
                 {
-                    Process.Start(new ProcessStartInfo { FileName = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ", UseShellExecute = true });
+                    Dalamud.Utility.Util.OpenLink("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ");
                 }
                 ImGui.PopStyleColor();
                 ImGui.SameLine();
                 ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.95f, 0.39f, 0.32f, 1));
                 if (ImGui.Button("Become a Patron"))
                 {
-                    Process.Start(new ProcessStartInfo { FileName = "https://www.patreon.com/bePatron?u=5597973", UseShellExecute = true });
+                    Dalamud.Utility.Util.OpenLink("https://www.patreon.com/bePatron?u=5597973");
                 }
                 ImGui.PopStyleColor();
                 ImGui.SameLine();
                 ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.25f, 0.67f, 0.87f, 1));
                 if (ImGui.Button("Support me on Ko-Fi"))
                 {
-                    Process.Start(new ProcessStartInfo { FileName = "https://ko-fi.com/Y8Y114PMT", UseShellExecute = true });
+                    Dalamud.Utility.Util.OpenLink("https://ko-fi.com/Y8Y114PMT");
                 }
                 ImGui.PopStyleColor();
             }

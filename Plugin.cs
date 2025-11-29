@@ -39,6 +39,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Veda;
 using static FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode.Delegates;
+using static Lumina.Data.Parsing.Layer.LayerCommon;
 using static Nicknamer.Plugin;
 using TextPayload = Dalamud.Game.Text.SeStringHandling.Payloads.TextPayload;
 
@@ -67,10 +68,6 @@ namespace Nicknamer
 
         public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IClientState clientState, IPlayerState playerState)
         {
-            PluginInterface = pluginInterface;
-            Chat = chat;
-            ClientState = clientState;
-            PlayerState = playerState;
 
             // Get or create a configuration object
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
@@ -110,6 +107,9 @@ namespace Nicknamer
                 foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
                 {
                     int NextIndex = sender.Payloads.FindIndex(x => x is RawPayload) - 1;
+
+                    // Possible that GMs return a null payload (Thanks infi!)
+                    if (CurrentPlayerPayload == null) { return; }
 
                     string PlayerName = CurrentPlayerPayload.PlayerName;
                     string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
