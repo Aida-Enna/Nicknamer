@@ -1,10 +1,13 @@
 <Project Sdk="Dalamud.NET.Sdk/13.0.0">
   <PropertyGroup>
     <Version>1.0.0.0</Version>
-	<TargetFramework>net9.0</TargetFramework>
+	<TargetFramework>net10.0</TargetFramework>
 	<OutputPath>..\Build\Nicknamer\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Nicknamer.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="DalamudPackager" Version="14.0.0" />
   </ItemGroup>
 </Project>

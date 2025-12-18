@@ -30,6 +30,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -68,7 +69,6 @@ namespace Nicknamer
 
         public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IClientState clientState, IPlayerState playerState)
         {
-
             // Get or create a configuration object
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
@@ -120,6 +120,31 @@ namespace Nicknamer
                     if (CurrentNicknameEntry.Enabled == false) { continue; }
                     if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
 
+    //                var builder = new SeStringBuilder();
+    //                var NewPayloads = new List<Payload>();
+    //                foreach (Payload payload in sender.Payloads)
+    //                {
+    //                    if (payload is RawPayload)
+    //                    {
+    ////                        var moreInfo = new SeStringBuilder()
+    ////.Add(this.Plugin.LinkPayloads[LinkPayloads.Command.OpenChangelog])
+    ////.AddText("[")
+    ////.AddUiForeground("Click to see more information", 1)
+    ////.AddText("]")
+    ////.Add(RawPayload.LinkTerminator)
+    ////.BuiltString;
+    //                        sender.Payloads.Add();
+    //                    }
+    //                    else
+    //                    {
+
+    //                    }
+    //                    NewPayloads.Add(payload);
+    //                }
+
+    //                sender.Payloads.Clear();
+    //                sender.Payloads.AddRange(NewPayloads);
+
                     //If we've set a global custom color but NOT an override
                     if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
                     {
@@ -145,7 +170,7 @@ namespace Nicknamer
                     //If we have global or override italics on, end them here
                     if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
                     {
-                        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++; 
+                        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++;
                     }
                     //end of the text
                     sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
@@ -309,7 +334,7 @@ namespace Nicknamer
                     EntriesToRemove.Add(Entry);
                 }
             }
-            foreach(NicknameEntry EntryToRemove in EntriesToRemove)
+            foreach (NicknameEntry EntryToRemove in EntriesToRemove)
             {
                 PluginConfig.Nicknames[ClientState.LocalContentId].Remove(EntryToRemove);
                 PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
@@ -332,7 +357,6 @@ namespace Nicknamer
         {
             ConfigWindow.Toggle();
         }
-
 
         #region IDisposable Support
 
