@@ -1,4 +1,5 @@
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using System;
 using System.Diagnostics;
@@ -28,8 +29,12 @@ namespace Nicknamer.Windows
         public override void Draw()
         {
             ImGui.Text("Global customization options for all nicknames:");
+            ImGui.Checkbox("Put nickname in front of player name instead of behind", ref Plugin.PluginConfig.PutNicknameInFront);
             ImGui.Checkbox("Use italics", ref Plugin.PluginConfig.Global_UseItalics);
-            ImGui.Checkbox("Use Custom Color", ref Plugin.PluginConfig.Global_UseCustomColor);
+            if (ImGui.Checkbox("Use custom color", ref Plugin.PluginConfig.Global_UseCustomColor))
+            {
+                Plugin.PluginConfig.MatchColoredName = false;
+            }
             if (Plugin.PluginConfig.Global_UseCustomColor)
             {
                 ImGui.Text("Use this color: ");
@@ -41,6 +46,18 @@ namespace Nicknamer.Windows
                 if (ImGui.Button("Click here to see what colors you can use"))
                 {
                     Dalamud.Utility.Util.OpenLink("https://github.com/Aida-Enna/Nicknamer/tree/main?tab=readme-ov-file#choosing-a-custom-color");
+                }
+            }
+            if (ImGui.Checkbox("Use colors from simple tweaks", ref Plugin.PluginConfig.MatchColoredName))
+            {
+                Plugin.PluginConfig.Global_UseCustomColor = false;
+            }
+            if (Plugin.PluginConfig.MatchColoredName)
+            {
+                if (!Plugin.PluginInterface.InstalledPlugins.Any(x => x.InternalName == "SimpleTweaksPlugin"))
+                {
+                    //var Plugins = Plugin.PluginInterface.InstalledPlugins.Where(x => x.InternalName.Contains("Tweak")).First();
+                    ImGui.TextColored(new System.Numerics.Vector4(1f, 0f, 0f, 1f), "You do not have Simple Tweaks installed, so this option will do nothing.\nIf you have another plugin installed that is modifying colors, you can\nignore this error but things may not work as expected.");
                 }
             }
             ImGui.Text("Per-player overrides are available from the\nright click -> nickname menu or the main window.");

@@ -41,7 +41,7 @@ namespace Nicknamer.Windows
         public override void Draw()
         {
             ImGui.SetWindowFocus();
-            NicknameEntry? CurrentEntry = Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+            NicknameEntry? CurrentEntry = Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
             if (OldNicknameString != "") { ImGui.Text("Current nickname: " + OldNicknameString); }
             ImGui.Text("New Nickname for " + PlayerName + "@" + PlayerWorld + ":");
@@ -49,13 +49,13 @@ namespace Nicknamer.Windows
             if (ImGui.IsWindowAppearing()) { ImGui.SetKeyboardFocusHere(); }
             if (ImGui.InputText("###NewNickname", ref NewNicknameString, 420 /*haha the sex number but weed*/, ImGuiInputTextFlags.EnterReturnsTrue) && !string.IsNullOrWhiteSpace(NewNicknameString))
             {
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).Nickname = NewNicknameString;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalStyle = OverrideGlobalStyle;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalItalics = OverrideGlobalItalics;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColor = OverrideGlobalColor;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColorActualColor = OverrideGlobalColorActualColor;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).Nickname = NewNicknameString;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalStyle = OverrideGlobalStyle;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalItalics = OverrideGlobalItalics;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColor = OverrideGlobalColor;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColorActualColor = OverrideGlobalColorActualColor;
                 Toggle();
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
                 Plugin.PluginConfig.Save();
                 Plugin.Chat.Print("[NN] " + PlayerName + "@" + PlayerWorld + "'s nickname has been set to: " + NewNicknameString);
             }
@@ -87,13 +87,13 @@ namespace Nicknamer.Windows
                     Toggle();
                     return;
                 }
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).Nickname = NewNicknameString;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalStyle = OverrideGlobalStyle;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalItalics = OverrideGlobalItalics;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColor = OverrideGlobalColor;
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColorActualColor = OverrideGlobalColorActualColor;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).Nickname = NewNicknameString;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalStyle = OverrideGlobalStyle;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalItalics = OverrideGlobalItalics;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColor = OverrideGlobalColor;
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld).OverrideGlobalColorActualColor = OverrideGlobalColorActualColor;
                 Toggle();
-                Plugin.PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
+                Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
                 Plugin.PluginConfig.Save();
                 Plugin.Chat.Print("[NN] " + PlayerName + "@" + PlayerWorld + "'s nickname has been set to: " + NewNicknameString);
             }

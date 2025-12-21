@@ -98,52 +98,88 @@ namespace Nicknamer
             {
                 if (!ClientState.IsLoggedIn) { return; }
 
-                if (!PluginConfig.Nicknames.ContainsKey(ClientState.LocalContentId))
+                if (!PluginConfig.Nicknames.ContainsKey(PlayerState.ContentId))
                 {
-                    PluginConfig.Nicknames.Add(ClientState.LocalContentId, new NicknameCollection());
+                    PluginConfig.Nicknames.Add(PlayerState.ContentId, new NicknameCollection());
                     PluginConfig.Save();
                 }
 
+                //var builder = new SeStringBuilder();
+                //var NewPayloads = new List<Payload>();
+                //foreach (Payload payload in sender.Payloads)
+                //{
+                //    if (payload is RawPayload)
+                //    {
+
+
+                //            string PlayerName = CurrentPlayerPayload.PlayerName;
+                //            string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
+
+                //        Payload TestPayload =  new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor);
+
+                //        //before we add the player payload, add our thing
+
+                //        //                        var moreInfo = new SeStringBuilder()
+                //        //.Add(this.Plugin.LinkPayloads[LinkPayloads.Command.OpenChangelog])
+                //        //.AddText("[")
+                //        //.AddUiForeground("Click to see more information", 1)
+                //        //.AddText("]")
+                //        //.Add(RawPayload.LinkTerminator)
+                //        //.BuiltString;
+
+                //        if (PluginConfig.PutNicknameInFront)
+                //        {
+                //            //Add our thing THEN the player payload
+                //            NewPayloads.Add(OurPayload);
+                //            NewPayloads.Add(payload);
+                //        }
+                //        else
+                //        {
+                //            //Add the player payload THEN our thing
+                //            NewPayloads.Add(payload);
+                //            NewPayloads.Add(OurPayload);
+                //        }
+
+                //    }
+                //    else
+                //    {
+
+                //    }
+                //    NewPayloads.Add(payload);
+                //}
+
+                //sender.Payloads.Clear();
+                //sender.Payloads.AddRange(NewPayloads);
+
                 foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
                 {
-                    int NextIndex = sender.Payloads.FindIndex(x => x is RawPayload) - 1;
+                    int NextIndex = sender.Payloads.FindIndex(x => x is RawPayload);
+
+                    if (Plugin.PluginConfig.MatchColoredName) { NextIndex--; }
 
                     // Possible that GMs return a null payload (Thanks infi!)
                     if (CurrentPlayerPayload == null) { return; }
 
+                    if (PluginConfig.PutNicknameInFront)
+                    {
+                        if (Plugin.PluginConfig.MatchColoredName)
+                        {
+                            NextIndex = sender.Payloads.FindIndex(x => x is RawPayload) - 2;
+                        }
+                        else
+                        {
+                            NextIndex = 1;
+                        }
+                    }
+
                     string PlayerName = CurrentPlayerPayload.PlayerName;
                     string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
 
-                    NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+                    NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
                     if (CurrentNicknameEntry == null) { continue; }
                     if (CurrentNicknameEntry.Enabled == false) { continue; }
                     if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
-
-    //                var builder = new SeStringBuilder();
-    //                var NewPayloads = new List<Payload>();
-    //                foreach (Payload payload in sender.Payloads)
-    //                {
-    //                    if (payload is RawPayload)
-    //                    {
-    ////                        var moreInfo = new SeStringBuilder()
-    ////.Add(this.Plugin.LinkPayloads[LinkPayloads.Command.OpenChangelog])
-    ////.AddText("[")
-    ////.AddUiForeground("Click to see more information", 1)
-    ////.AddText("]")
-    ////.Add(RawPayload.LinkTerminator)
-    ////.BuiltString;
-    //                        sender.Payloads.Add();
-    //                    }
-    //                    else
-    //                    {
-
-    //                    }
-    //                    NewPayloads.Add(payload);
-    //                }
-
-    //                sender.Payloads.Clear();
-    //                sender.Payloads.AddRange(NewPayloads);
 
                     //If we've set a global custom color but NOT an override
                     if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
@@ -158,7 +194,14 @@ namespace Nicknamer
                         sender.Payloads.Insert(NextIndex, new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor)); NextIndex++;
                     }
                     //Insert the start of the new text payload
-                    sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
+                    if (PluginConfig.PutNicknameInFront)
+                    {
+                        sender.Payloads.Insert(NextIndex, new TextPayload("(")); NextIndex++;
+                    }
+                    else
+                    {
+                        sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
+                    }
                     //If we have global or override italics on
                     if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
                     {
@@ -173,13 +216,19 @@ namespace Nicknamer
                         sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++;
                     }
                     //end of the text
-                    sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
+                    if (PluginConfig.PutNicknameInFront)
+                    {
+                        sender.Payloads.Insert(NextIndex, new TextPayload(") ")); NextIndex++;
+                    }
+                    else
+                    {
+                        sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
+                    }
                     //end the color
                     if (PluginConfig.Global_UseCustomColor || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor))
                     {
                         sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++;
                     }
-                    //}
                 }
             }
             catch (Exception f)
@@ -236,7 +285,7 @@ namespace Nicknamer
 
                 string PlayerName = ((MenuTargetDefault)clickedArgs.Target).TargetName;
                 string PlayerWorld = ((MenuTargetDefault)clickedArgs.Target).TargetHomeWorld.Value.Name.ExtractText();
-                NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+                NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
                 var RemoveNicknameMenuItem = new MenuItem
                 {
@@ -283,13 +332,13 @@ namespace Nicknamer
             ChangeNicknameWindow.PlayerName = PlayerName;
             ChangeNicknameWindow.PlayerWorld = PlayerWorld;
             ChangeNicknameWindow.OldNicknameString = "";
-            NicknameEntry? currentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+            NicknameEntry? currentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
             if (currentNicknameEntry == null)
             {
-                PluginConfig.Nicknames[ClientState.LocalContentId].Add(new NicknameEntry { PlayerName = PlayerName, PlayerWorld = PlayerWorld, Nickname = "", Enabled = true, ContentID = 0, OverrideGlobalItalics = false, OverrideGlobalStyle = false, OverrideGlobalColor = false, OverrideGlobalColorActualColor = 57 });
+                PluginConfig.Nicknames[PlayerState.ContentId].Add(new NicknameEntry { PlayerName = PlayerName, PlayerWorld = PlayerWorld, Nickname = "", Enabled = true, ContentID = 0, OverrideGlobalItalics = false, OverrideGlobalStyle = false, OverrideGlobalColor = false, OverrideGlobalColorActualColor = 57 });
                 PluginConfig.Save();
-                currentNicknameEntry = PluginConfig.Nicknames[ClientState.LocalContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+                currentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
             }
             ChangeNicknameWindow.OverrideGlobalStyle = currentNicknameEntry.OverrideGlobalStyle;
             ChangeNicknameWindow.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
@@ -317,8 +366,8 @@ namespace Nicknamer
 
         public static void RemoveNickname(NicknameEntry? currentNicknameEntry)
         {
-            PluginConfig.Nicknames[ClientState.LocalContentId].Remove(currentNicknameEntry);
-            PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
+            PluginConfig.Nicknames[PlayerState.ContentId].Remove(currentNicknameEntry);
+            PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
             PluginConfig.Save();
             Chat.Print("[NN] " + currentNicknameEntry.PlayerName + "@" + currentNicknameEntry.PlayerWorld + "'s nickname has been removed.");
             FixNicknameEntries();
@@ -327,7 +376,7 @@ namespace Nicknamer
         public static void FixNicknameEntries()
         {
             List<NicknameEntry> EntriesToRemove = new();
-            foreach (NicknameEntry Entry in PluginConfig.Nicknames[ClientState.LocalContentId])
+            foreach (NicknameEntry Entry in PluginConfig.Nicknames[PlayerState.ContentId])
             {
                 if (string.IsNullOrWhiteSpace(Entry.Nickname))
                 {
@@ -336,8 +385,8 @@ namespace Nicknamer
             }
             foreach (NicknameEntry EntryToRemove in EntriesToRemove)
             {
-                PluginConfig.Nicknames[ClientState.LocalContentId].Remove(EntryToRemove);
-                PluginConfig.Nicknames[Plugin.ClientState.LocalContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
+                PluginConfig.Nicknames[PlayerState.ContentId].Remove(EntryToRemove);
+                PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Sort((a, b) => string.Compare(a.PlayerWorld, b.PlayerWorld, StringComparison.Ordinal));
                 PluginConfig.Save();
             }
         }
