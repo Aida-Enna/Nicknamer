@@ -33,6 +33,7 @@ using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -98,138 +99,206 @@ namespace Nicknamer
             {
                 if (!ClientState.IsLoggedIn) { return; }
 
+                if (sender.Payloads.Count == 0) { return; }
+
                 if (!PluginConfig.Nicknames.ContainsKey(PlayerState.ContentId))
                 {
                     PluginConfig.Nicknames.Add(PlayerState.ContentId, new NicknameCollection());
                     PluginConfig.Save();
                 }
 
-                //var builder = new SeStringBuilder();
-                //var NewPayloads = new List<Payload>();
-                //foreach (Payload payload in sender.Payloads)
-                //{
-                //    if (payload is RawPayload)
-                //    {
+                var builder = new SeStringBuilder();
+                var NewPayloads = new List<Payload>();
 
-
-                //            string PlayerName = CurrentPlayerPayload.PlayerName;
-                //            string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
-
-                //        Payload TestPayload =  new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor);
-
-                //        //before we add the player payload, add our thing
-
-                //        //                        var moreInfo = new SeStringBuilder()
-                //        //.Add(this.Plugin.LinkPayloads[LinkPayloads.Command.OpenChangelog])
-                //        //.AddText("[")
-                //        //.AddUiForeground("Click to see more information", 1)
-                //        //.AddText("]")
-                //        //.Add(RawPayload.LinkTerminator)
-                //        //.BuiltString;
-
-                //        if (PluginConfig.PutNicknameInFront)
-                //        {
-                //            //Add our thing THEN the player payload
-                //            NewPayloads.Add(OurPayload);
-                //            NewPayloads.Add(payload);
-                //        }
-                //        else
-                //        {
-                //            //Add the player payload THEN our thing
-                //            NewPayloads.Add(payload);
-                //            NewPayloads.Add(OurPayload);
-                //        }
-
-                //    }
-                //    else
-                //    {
-
-                //    }
-                //    NewPayloads.Add(payload);
-                //}
-
-                //sender.Payloads.Clear();
-                //sender.Payloads.AddRange(NewPayloads);
-
-                foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
+                string PlayerName = "Player";
+                string PlayerWorld = "World";
+                bool ClearedPlayerPayloadAlready = false;
+                foreach (Payload payload in sender.Payloads)
                 {
-                    int NextIndex = sender.Payloads.FindIndex(x => x is RawPayload);
-
-                    if (Plugin.PluginConfig.MatchColoredName) { NextIndex--; }
-
-                    // Possible that GMs return a null payload (Thanks infi!)
-                    if (CurrentPlayerPayload == null) { return; }
-
-                    if (PluginConfig.PutNicknameInFront)
+                    if (payload is PlayerPayload)
                     {
-                        if (Plugin.PluginConfig.MatchColoredName)
+                        PlayerName = (payload as PlayerPayload).PlayerName;
+                        PlayerWorld = (payload as PlayerPayload).World.Value.Name.ExtractText();
+                    }
+
+                    if (payload is RawPayload)
+                    {
+                        List<Payload> NicknamePayload = new List<Payload>();
+
+                        //                        Payload TestPayload = new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor);
+
+                        //before we add the player payload, add our thing
+
+                        NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+
+                        if (CurrentNicknameEntry == null) { return; }
+                        if (CurrentNicknameEntry.Enabled == false) { return; }
+                        if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
+
+                        //If we've set a global custom color but NOT an override
+                        if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
                         {
-                            NextIndex = sender.Payloads.FindIndex(x => x is RawPayload) - 2;
+                            //Apply the color
+                            NicknamePayload.Add(new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor));
+                        }
+                        //If we've set an override
+                        if (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor)
+                        {
+                            //Apply the color
+                            NicknamePayload.Add(new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor));
+                        }
+                        //If we have global or override italics on
+                        if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
+                        {
+                            //Apply italics
+                            NicknamePayload.Add(new EmphasisItalicPayload(true));
+                        }
+                        //Put the name in
+                        if (PluginConfig.PutNicknameInFront)
+                        {
+                            NicknamePayload.Add(new TextPayload("("));
+                            NicknamePayload.Add(new TextPayload(CurrentNicknameEntry.Nickname));
+                            NicknamePayload.Add(new TextPayload(") "));
                         }
                         else
                         {
-                            NextIndex = 1;
+                            NicknamePayload.Add(new TextPayload(" ("));
+                            NicknamePayload.Add(new TextPayload(CurrentNicknameEntry.Nickname));
+                            NicknamePayload.Add(new TextPayload(")"));
+                        }
+                        //If we have global or override italics on, end them here
+                        if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
+                        {
+                            NicknamePayload.Add(new EmphasisItalicPayload(false));
+                        }
+                        //end the color
+                        if (PluginConfig.Global_UseCustomColor || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor))
+                        {
+                            NicknamePayload.Add(new UIForegroundPayload(0));
+                        }
+
+                        //                        var moreInfo = new SeStringBuilder()
+                        //.Add(this.Plugin.LinkPayloads[LinkPayloads.Command.OpenChangelog])
+                        //.AddText("[")
+                        //.AddUiForeground("Click to see more information", 1)
+                        //.AddText("]")
+                        //.Add(RawPayload.LinkTerminator)
+                        //.BuiltString;
+
+                        if (PluginConfig.PutNicknameInFront)
+                        {
+                            //Add our thing THEN the player payload
+                            NewPayloads.AddRange(NicknamePayload);
+                            NewPayloads.Add(payload);
+                        }
+                        else
+                        {
+                            //Add the player payload THEN our thing
+                            NewPayloads.Add(payload);
+                            NewPayloads.AddRange(NicknamePayload);
+                        }
+                        Thread.Sleep(1);
+                    }
+                    if (payload is UIForegroundPayload && PluginConfig.MatchColoredName && !ClearedPlayerPayloadAlready)
+                    {
+                        if ((payload as UIForegroundPayload).ColorKey == 0)
+                        {
+                            ClearedPlayerPayloadAlready = true;
+                            continue;
                         }
                     }
-
-                    string PlayerName = CurrentPlayerPayload.PlayerName;
-                    string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
-
-                    NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
-
-                    if (CurrentNicknameEntry == null) { continue; }
-                    if (CurrentNicknameEntry.Enabled == false) { continue; }
-                    if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
-
-                    //If we've set a global custom color but NOT an override
-                    if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
-                    {
-                        //Apply the color
-                        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor)); NextIndex++;
-                    }
-                    //If we've set an override
-                    if (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor)
-                    {
-                        //Apply the color
-                        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor)); NextIndex++;
-                    }
-                    //Insert the start of the new text payload
-                    if (PluginConfig.PutNicknameInFront)
-                    {
-                        sender.Payloads.Insert(NextIndex, new TextPayload("(")); NextIndex++;
-                    }
-                    else
-                    {
-                        sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
-                    }
-                    //If we have global or override italics on
-                    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
-                    {
-                        //Apply italics
-                        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++;
-                    }
-                    //Put the name in
-                    sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
-                    //If we have global or override italics on, end them here
-                    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
-                    {
-                        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++;
-                    }
-                    //end of the text
-                    if (PluginConfig.PutNicknameInFront)
-                    {
-                        sender.Payloads.Insert(NextIndex, new TextPayload(") ")); NextIndex++;
-                    }
-                    else
-                    {
-                        sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
-                    }
-                    //end the color
-                    if (PluginConfig.Global_UseCustomColor || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor))
-                    {
-                        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++;
-                    }
+                    NewPayloads.Add(payload);
                 }
+
+                if (NewPayloads.Count > 1)
+                {
+                    sender.Payloads.Clear();
+                    sender.Payloads.AddRange(NewPayloads);
+                    if (PluginConfig.MatchColoredName) { sender.Payloads.Insert(sender.Payloads.Count()-1, new UIForegroundPayload(0)); }
+                    Thread.Sleep(1);
+                }
+
+                //Old Method
+
+                //foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
+                //{
+                //    int NextIndex = sender.Payloads.FindIndex(x => x is RawPayload);
+
+                //    if (Plugin.PluginConfig.MatchColoredName) { NextIndex--; }
+
+                //    // Possible that GMs return a null payload (Thanks infi!)
+                //    if (CurrentPlayerPayload == null) { return; }
+
+                //    if (PluginConfig.PutNicknameInFront)
+                //    {
+                //        if (Plugin.PluginConfig.MatchColoredName)
+                //        {
+                //            NextIndex = sender.Payloads.FindIndex(x => x is RawPayload) - 2;
+                //        }
+                //        else
+                //        {
+                //            NextIndex = 1;
+                //        }
+                //    }
+
+                //    string PlayerName = CurrentPlayerPayload.PlayerName;
+                //    string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
+
+                //    NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
+
+                //    if (CurrentNicknameEntry == null) { continue; }
+                //    if (CurrentNicknameEntry.Enabled == false) { continue; }
+                //    if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
+
+                //    //If we've set a global custom color but NOT an override
+                //    if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
+                //    {
+                //        //Apply the color
+                //        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor)); NextIndex++;
+                //    }
+                //    //If we've set an override
+                //    if (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor)
+                //    {
+                //        //Apply the color
+                //        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor)); NextIndex++;
+                //    }
+                //    //Insert the start of the new text payload
+                //    if (PluginConfig.PutNicknameInFront)
+                //    {
+                //        sender.Payloads.Insert(NextIndex, new TextPayload("(")); NextIndex++;
+                //    }
+                //    else
+                //    {
+                //        sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
+                //    }
+                //    //If we have global or override italics on
+                //    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
+                //    {
+                //        //Apply italics
+                //        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++;
+                //    }
+                //    //Put the name in
+                //    sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
+                //    //If we have global or override italics on, end them here
+                //    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
+                //    {
+                //        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++;
+                //    }
+                //    //end of the text
+                //    if (PluginConfig.PutNicknameInFront)
+                //    {
+                //        sender.Payloads.Insert(NextIndex, new TextPayload(") ")); NextIndex++;
+                //    }
+                //    else
+                //    {
+                //        sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
+                //    }
+                //    //end the color
+                //    if (PluginConfig.Global_UseCustomColor || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor))
+                //    {
+                //        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++;
+                //    }
+                //}
             }
             catch (Exception f)
             {
