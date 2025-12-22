@@ -113,21 +113,13 @@ namespace Nicknamer
                 string PlayerName = "Player";
                 string PlayerWorld = "World";
                 bool ClearedPlayerPayloadAlready = false;
+                List<Payload> NicknamePayload = new List<Payload>();
                 foreach (Payload payload in sender.Payloads)
                 {
                     if (payload is PlayerPayload)
                     {
                         PlayerName = (payload as PlayerPayload).PlayerName;
                         PlayerWorld = (payload as PlayerPayload).World.Value.Name.ExtractText();
-                    }
-
-                    if (payload is RawPayload)
-                    {
-                        List<Payload> NicknamePayload = new List<Payload>();
-
-                        //                        Payload TestPayload = new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor);
-
-                        //before we add the player payload, add our thing
 
                         NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
@@ -156,15 +148,11 @@ namespace Nicknamer
                         //Put the name in
                         if (PluginConfig.PutNicknameInFront)
                         {
-                            NicknamePayload.Add(new TextPayload("("));
-                            NicknamePayload.Add(new TextPayload(CurrentNicknameEntry.Nickname));
-                            NicknamePayload.Add(new TextPayload(") "));
+                            NicknamePayload.Add(new TextPayload("(" + CurrentNicknameEntry.Nickname + ") "));
                         }
                         else
                         {
-                            NicknamePayload.Add(new TextPayload(" ("));
-                            NicknamePayload.Add(new TextPayload(CurrentNicknameEntry.Nickname));
-                            NicknamePayload.Add(new TextPayload(")"));
+                            NicknamePayload.Add(new TextPayload(" (" + CurrentNicknameEntry.Nickname + ")"));
                         }
                         //If we have global or override italics on, end them here
                         if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
@@ -176,25 +164,33 @@ namespace Nicknamer
                         {
                             NicknamePayload.Add(new UIForegroundPayload(0));
                         }
-
-                        //                        var moreInfo = new SeStringBuilder()
-                        //.Add(this.Plugin.LinkPayloads[LinkPayloads.Command.OpenChangelog])
-                        //.AddText("[")
-                        //.AddUiForeground("Click to see more information", 1)
-                        //.AddText("]")
-                        //.Add(RawPayload.LinkTerminator)
-                        //.BuiltString;
-
-                        if (PluginConfig.PutNicknameInFront)
+                    }
+                    if (PluginConfig.PutNicknameInFront)
+                    {
+                        if (payload is TextPayload)
                         {
-                            //Add our thing THEN the player payload
-                            NewPayloads.AddRange(NicknamePayload);
-                            NewPayloads.Add(payload);
+                            //Add our thing THEN the name payload
+                            if (Plugin.PluginConfig.MatchColoredName)
+                            {
+                                NewPayloads.AddRange(NicknamePayload);
+                            }
+                            else
+                            {
+                                UIForegroundPayload FirstUIPayload = (UIForegroundPayload)sender.Payloads.Where(x => x is UIForegroundPayload).First();
+                                NewPayloads.Remove(FirstUIPayload);
+                                NewPayloads.AddRange(NicknamePayload);
+                                NewPayloads.Add(FirstUIPayload);
+                            }
+                            //NewPayloads.Add(payload);
                         }
-                        else
+                    }
+
+                    if (payload is RawPayload)
+                    {
+                        if (!PluginConfig.PutNicknameInFront)
                         {
                             //Add the player payload THEN our thing
-                            NewPayloads.Add(payload);
+                            //NewPayloads.Add(payload);)
                             NewPayloads.AddRange(NicknamePayload);
                         }
                         Thread.Sleep(1);
@@ -214,7 +210,7 @@ namespace Nicknamer
                 {
                     sender.Payloads.Clear();
                     sender.Payloads.AddRange(NewPayloads);
-                    if (PluginConfig.MatchColoredName) { sender.Payloads.Insert(sender.Payloads.Count()-1, new UIForegroundPayload(0)); }
+                    if (PluginConfig.MatchColoredName) { sender.Payloads.Insert(sender.Payloads.Count() - 1, new UIForegroundPayload(0)); }
                     Thread.Sleep(1);
                 }
 
