@@ -206,7 +206,7 @@ namespace Nicknamer
                     NewPayloads.Add(payload);
                 }
 
-                if (NewPayloads.Count > 1)
+                if (NewPayloads.Count > 2)
                 {
                     sender.Payloads.Clear();
                     sender.Payloads.AddRange(NewPayloads);
@@ -409,7 +409,8 @@ namespace Nicknamer
             ChangeNicknameWindow.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
             ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
             ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
-
+            ChangeNicknameWindow.StartX = addonContextMenu->X;
+            ChangeNicknameWindow.StartY = addonContextMenu->Y;
             ChangeNicknameWindow.Toggle();
         }
 
@@ -425,6 +426,8 @@ namespace Nicknamer
             ChangeNicknameWindow.OverrideGlobalItalics = currentNicknameEntry.OverrideGlobalItalics;
             ChangeNicknameWindow.OverrideGlobalColor = currentNicknameEntry.OverrideGlobalColor;
             ChangeNicknameWindow.OverrideGlobalColorActualColor = currentNicknameEntry.OverrideGlobalColorActualColor;
+            ChangeNicknameWindow.StartX = addonContextMenu->X;
+            ChangeNicknameWindow.StartY = addonContextMenu->Y;
 
             ChangeNicknameWindow.Toggle();
         }

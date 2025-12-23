@@ -21,6 +21,8 @@ namespace Nicknamer.Windows
         public bool OverrideGlobalItalics = false;
         public bool OverrideGlobalColor = false;
         public ushort OverrideGlobalColorActualColor = 57;
+        public int StartX = 0;
+        public int StartY = 0;
 
         // We give this window a constant ID using ###.
         // This allows for labels to be dynamic, like "{FPS Counter}fps###XYZ counter window",
@@ -40,6 +42,7 @@ namespace Nicknamer.Windows
 
         public override void Draw()
         {
+            ImGui.SetWindowPos(new Vector2(StartX + 50, StartY + 50));
             ImGui.SetWindowFocus();
             NicknameEntry? CurrentEntry = Plugin.PluginConfig.Nicknames[Plugin.PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
 
