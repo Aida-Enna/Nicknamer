@@ -210,95 +210,23 @@ namespace Nicknamer
                 {
                     sender.Payloads.Clear();
                     sender.Payloads.AddRange(NewPayloads);
-                    if (PluginConfig.MatchColoredName) { sender.Payloads.Insert(sender.Payloads.Count() - 1, new UIForegroundPayload(0)); }
+                    if (PluginConfig.MatchColoredName) {  sender.Payloads.Insert(sender.Payloads.Count() - 1, new UIForegroundPayload(0)); }
                     Thread.Sleep(1);
                 }
-
-                //Old Method
-
-                //foreach (PlayerPayload CurrentPlayerPayload in sender.Payloads.Where(x => x is PlayerPayload))
-                //{
-                //    int NextIndex = sender.Payloads.FindIndex(x => x is RawPayload);
-
-                //    if (Plugin.PluginConfig.MatchColoredName) { NextIndex--; }
-
-                //    // Possible that GMs return a null payload (Thanks infi!)
-                //    if (CurrentPlayerPayload == null) { return; }
-
-                //    if (PluginConfig.PutNicknameInFront)
-                //    {
-                //        if (Plugin.PluginConfig.MatchColoredName)
-                //        {
-                //            NextIndex = sender.Payloads.FindIndex(x => x is RawPayload) - 2;
-                //        }
-                //        else
-                //        {
-                //            NextIndex = 1;
-                //        }
-                //    }
-
-                //    string PlayerName = CurrentPlayerPayload.PlayerName;
-                //    string PlayerWorld = CurrentPlayerPayload.World.Value.Name.ExtractText();
-
-                //    NicknameEntry? CurrentNicknameEntry = PluginConfig.Nicknames[PlayerState.ContentId].Find(x => x.PlayerName == PlayerName && x.PlayerWorld == PlayerWorld);
-
-                //    if (CurrentNicknameEntry == null) { continue; }
-                //    if (CurrentNicknameEntry.Enabled == false) { continue; }
-                //    if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
-
-                //    //If we've set a global custom color but NOT an override
-                //    if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
-                //    {
-                //        //Apply the color
-                //        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(Plugin.PluginConfig.Global_SelectedColor)); NextIndex++;
-                //    }
-                //    //If we've set an override
-                //    if (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor)
-                //    {
-                //        //Apply the color
-                //        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(CurrentNicknameEntry.OverrideGlobalColorActualColor)); NextIndex++;
-                //    }
-                //    //Insert the start of the new text payload
-                //    if (PluginConfig.PutNicknameInFront)
-                //    {
-                //        sender.Payloads.Insert(NextIndex, new TextPayload("(")); NextIndex++;
-                //    }
-                //    else
-                //    {
-                //        sender.Payloads.Insert(NextIndex, new TextPayload(" (")); NextIndex++;
-                //    }
-                //    //If we have global or override italics on
-                //    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
-                //    {
-                //        //Apply italics
-                //        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(true)); NextIndex++;
-                //    }
-                //    //Put the name in
-                //    sender.Payloads.Insert(NextIndex, new TextPayload(CurrentNicknameEntry.Nickname)); NextIndex++;
-                //    //If we have global or override italics on, end them here
-                //    if (PluginConfig.Global_UseItalics || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalItalics))
-                //    {
-                //        sender.Payloads.Insert(NextIndex, new EmphasisItalicPayload(false)); NextIndex++;
-                //    }
-                //    //end of the text
-                //    if (PluginConfig.PutNicknameInFront)
-                //    {
-                //        sender.Payloads.Insert(NextIndex, new TextPayload(") ")); NextIndex++;
-                //    }
-                //    else
-                //    {
-                //        sender.Payloads.Insert(NextIndex, new TextPayload(")")); NextIndex++;
-                //    }
-                //    //end the color
-                //    if (PluginConfig.Global_UseCustomColor || (CurrentNicknameEntry.OverrideGlobalStyle && CurrentNicknameEntry.OverrideGlobalColor))
-                //    {
-                //        sender.Payloads.Insert(NextIndex, new UIForegroundPayload(0)); NextIndex++;
-                //    }
-                //}
+#if DEBUG
+                int count = 0;
+                Plugin.PluginLog.Debug("==PAYLOAD START==");
+                foreach (Payload PLoad in sender.Payloads)
+                {
+                    Plugin.PluginLog.Debug("[" + count + "] " + PLoad.ToString());
+                    count++;
+                }
+                Plugin.PluginLog.Debug("==PAYLOAD END==");
+#endif
             }
             catch (Exception f)
             {
-                // Ignore exception
+                PluginLog.Error(f.ToString());
             }
         }
 
@@ -338,7 +266,7 @@ namespace Nicknamer
             }
             catch (Exception f)
             {
-                // Ignore exception
+                PluginLog.Error(f.ToString());
             }
         }
 
