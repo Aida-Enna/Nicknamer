@@ -1,48 +1,18 @@
-﻿using Dalamud.Bindings.ImGui;
-using Dalamud.Configuration;
-using Dalamud.Game;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.Gui.ContextMenu;
+﻿using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Hooking;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using FFXIVClientStructs.FFXIV.Client.UI.Shell;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using Lumina;
-using Lumina.Excel.Sheets;
-using Lumina.Excel.Sheets.Experimental;
-using Lumina.Text.Payloads;
 using Nicknamer.Windows;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.Pipelines;
 using System.Linq;
-using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using Veda;
-using static FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode.Delegates;
-using static Lumina.Data.Parsing.Layer.LayerCommon;
-using static Nicknamer.Plugin;
 using TextPayload = Dalamud.Game.Text.SeStringHandling.Payloads.TextPayload;
 
 namespace Nicknamer
@@ -168,53 +138,80 @@ namespace Nicknamer
                         {
                             NicknamePayload.Add(new UIForegroundPayload(0));
                         }
+                        NewPayloads.Add(payload);
                     }
-                    if (PluginConfig.PutNicknameInFront)
+                    else if (payload is TextPayload) // If it's a text payload
                     {
-                        if (payload is TextPayload)
+                        string PayloadPlayerName = string.Concat((payload as TextPayload).Text.Where(c => Char.IsLetterOrDigit(c) || Char.IsWhiteSpace(c)));
+                        if (PayloadPlayerName == PlayerName) // If it's the person's name
                         {
-                            //Add our thing THEN the name payload
-                            if (Plugin.PluginConfig.MatchColoredName)
+                            PayloadsModified = true;
+                            if (PluginConfig.PutNicknameInFront) // If we're supposed to save it in front
                             {
                                 NewPayloads.AddRange(NicknamePayload);
+                                NewPayloads.Add(payload);
                             }
                             else
                             {
-                                UIForegroundPayload FirstUIPayload = (UIForegroundPayload)sender.Payloads.Where(x => x is UIForegroundPayload).First();
-                                NewPayloads.Remove(FirstUIPayload);
+                                NewPayloads.Add(payload);
                                 NewPayloads.AddRange(NicknamePayload);
-                                NewPayloads.Add(FirstUIPayload);
                             }
-                            //NewPayloads.Add(payload);
+                        }
+                        else
+                        { 
+                            NewPayloads.Add(payload); 
                         }
                     }
+                    else
+                    {
+                        NewPayloads.Add(payload);
+                    }
+                    //if (PluginConfig.PutNicknameInFront)
+                    //{
+                    //    if (payload is TextPayload)
+                    //    {
+                    //        //Add our thing THEN the name payload
+                    //        if (Plugin.PluginConfig.MatchColoredName)
+                    //        {
+                    //            NewPayloads.AddRange(NicknamePayload);
+                    //        }
+                    //        else
+                    //        {
+                    //            UIForegroundPayload FirstUIPayload = (UIForegroundPayload)sender.Payloads.Where(x => x is UIForegroundPayload).First();
+                    //            NewPayloads.Remove(FirstUIPayload);
+                    //            NewPayloads.AddRange(NicknamePayload);
+                    //            NewPayloads.Add(FirstUIPayload);
+                    //        }
+                    //        //NewPayloads.Add(payload);
+                    //    }
+                    //}
 
-                    if (payload is RawPayload)
-                    {
-                        if (!PluginConfig.PutNicknameInFront)
-                        {
-                            //Add the player payload THEN our thing
-                            //NewPayloads.Add(payload);)
-                            NewPayloads.AddRange(NicknamePayload);
-                        }
-                        Thread.Sleep(1);
-                    }
-                    if (payload is UIForegroundPayload && PluginConfig.MatchColoredName && !ClearedPlayerPayloadAlready)
-                    {
-                        if ((payload as UIForegroundPayload).ColorKey == 0)
-                        {
-                            ClearedPlayerPayloadAlready = true;
-                            continue;
-                        }
-                    }
-                    NewPayloads.Add(payload);
+                    //if (payload is RawPayload)
+                    //{
+                    //    if (!PluginConfig.PutNicknameInFront)
+                    //    {
+                    //        //Add the player payload THEN our thing
+                    //        //NewPayloads.Add(payload);)
+                    //        NewPayloads.AddRange(NicknamePayload);
+                    //    }
+                    //    Thread.Sleep(1);
+                    //}
+                    //if (payload is UIForegroundPayload && PluginConfig.MatchColoredName && !ClearedPlayerPayloadAlready)
+                    //{
+                    //    if ((payload as UIForegroundPayload).ColorKey == 0)
+                    //    {
+                    //        ClearedPlayerPayloadAlready = true;
+                    //        continue;
+                    //    }
+                    //}
+                    //NewPayloads.Add(payload);
                 }
 
                 if (PayloadsModified/*NewPayloads.Count > 2*/)
                 {
                     sender.Payloads.Clear();
                     sender.Payloads.AddRange(NewPayloads);
-                    if (PluginConfig.MatchColoredName) {  sender.Payloads.Insert(sender.Payloads.Count() - 1, new UIForegroundPayload(0)); }
+                    //if (PluginConfig.MatchColoredName) { sender.Payloads.Insert(sender.Payloads.Count() - 1, new UIForegroundPayload(0)); }
                     Thread.Sleep(1);
                 }
 #if DEBUG

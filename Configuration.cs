@@ -11,7 +11,7 @@ namespace Nicknamer
         public bool Global_UseCustomColor = false;
         public ushort Global_SelectedColor = 57;
         public bool PutNicknameInFront = true;
-        public bool MatchColoredName = false;
+        //public bool MatchColoredName = false;
 
 
         public Dictionary<ulong, NicknameCollection> Nicknames { get; set; } = new Dictionary<ulong, NicknameCollection>();
