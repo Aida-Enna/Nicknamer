@@ -107,6 +107,7 @@ namespace Nicknamer
                     PluginConfig.Save();
                 }
 
+                bool PayloadsModified = false;
                 var builder = new SeStringBuilder();
                 var NewPayloads = new List<Payload>();
 
@@ -126,6 +127,9 @@ namespace Nicknamer
                         if (CurrentNicknameEntry == null) { return; }
                         if (CurrentNicknameEntry.Enabled == false) { return; }
                         if (String.IsNullOrWhiteSpace(CurrentNicknameEntry.Nickname)) { return; }
+
+                        PayloadsModified = true;
+                        //if (PlayerState.CharacterName == PlayerName) { return; }
 
                         //If we've set a global custom color but NOT an override
                         if (PluginConfig.Global_UseCustomColor && CurrentNicknameEntry.OverrideGlobalStyle == false)
@@ -206,7 +210,7 @@ namespace Nicknamer
                     NewPayloads.Add(payload);
                 }
 
-                if (NewPayloads.Count > 2)
+                if (PayloadsModified/*NewPayloads.Count > 2*/)
                 {
                     sender.Payloads.Clear();
                     sender.Payloads.AddRange(NewPayloads);
