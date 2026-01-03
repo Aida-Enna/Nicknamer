@@ -44,6 +44,12 @@ namespace Nicknamer
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
 
+            if (!PluginConfig.Nicknames.ContainsKey(PlayerState.ContentId))
+            {
+                PluginConfig.Nicknames.Add(PlayerState.ContentId, new NicknameCollection());
+                PluginConfig.Save();
+            }
+
             ConfigWindow = new ConfigWindow(this);
             ChangeNicknameWindow = new ChangeNicknameWindow(this);
             MainWindow = new MainWindow(this);
@@ -70,12 +76,6 @@ namespace Nicknamer
                 if (!ClientState.IsLoggedIn) { return; }
 
                 if (sender.Payloads.Count == 0) { return; }
-
-                if (!PluginConfig.Nicknames.ContainsKey(PlayerState.ContentId))
-                {
-                    PluginConfig.Nicknames.Add(PlayerState.ContentId, new NicknameCollection());
-                    PluginConfig.Save();
-                }
 
                 bool PayloadsModified = false;
                 var builder = new SeStringBuilder();
